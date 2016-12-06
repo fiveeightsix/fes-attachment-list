@@ -32,37 +32,44 @@ function fes_get_file_type( $file_url ) {
 /**
  * Builds the attachment list shortcode output.
  *
- * Attachment title description are filtered through 'the_title' and 'the_content' repsectively.
+ * Attachment title description are filtered through 'the_title' and 'the_content' respectively.
  *
  * @param array $attr {
  *     Attributes of the attachment list shortcode.
  *
- *     @type string       $order      Order of the images in the gallery. Default 'ASC'. Accepts 'ASC', 'DESC'.
- *     @type string       $orderby    The field to use when ordering the images. Default 'title ID'.
- *                                    Accepts any valid SQL ORDERBY statement.
- *     @type string       $ids        A comma-separated list of IDs of attachments to display. Default empty.
+ *     @type string       $order           Order of the images in the gallery. Default 'ASC'. Accepts 'ASC', 'DESC'.
+ *     @type string       $orderby         The field to use when ordering the images. Default 'title ID'.
+ *                                         Accepts any valid SQL ORDERBY statement.
+ *     @type string       $ids             A comma-separated list of IDs of attachments to display. Default empty.
+ *     @type string       $id              ID of the parent page to display the attachments of. Default current page.
+                                           Not used if $ids argument is present.
+ *     @type string       $idattribute     ID attribute for the attachment list. Default empty.
  * }
  * @return string HTML content to display attachment list.
  */
 function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
   $post = get_post();
-  
+
+  // Merge shorcut attributes with default values.
   $atts = shortcode_atts( array(
-    'order' => 'ASC',
-    'orderby' => 'title ID',
-    'id' => $post ? $post->ID : 0,
-    'ids' => ''
+    'order'       => 'ASC',
+    'orderby'     => 'title ID',
+    'id'          => $post ? $post->ID : 0,
+    'ids'         => '',
+    'idattribute' => ''
   ), $atts );
 
   $id = intval( $atts['id'] );
 
+  // Default arguments for the attachment post query.
   $args = array(
-    'order' => $atts['order'],
-    'orderby' => $atts['orderby'],
+    'order'       => $atts['order'],
+    'orderby'     => $atts['orderby'],
     'post_status' => 'inherit',
-    'post_type' => 'attachment'
+    'post_type'   => 'attachment'
   );
-  
+
+  // Use the list of IDs if provided, otherwise use all children of the current post.
   if ( ! empty( $atts['ids'] ) ) {
     $attachments = get_posts( array_merge( $args, array(
       'include' => $atts['ids'],
@@ -73,15 +80,23 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
     ) ) );
   }
 
+  // Exit early if there is nothing to display.
   if ( empty( $attachments ) ) {
     return '';
   }
-  
-  $output = "<div class='attachment-list'>";
+
+  // Generate the output.
+  $idAtt = $atts['idattribute'];
+
+  if ( ! empty( $idAtt ) ) {
+    $idAtt = " id='{$idAtt}'";
+  }
+
+  $output = "<div{$idAtt} class='attachment-list'>";
 
   foreach ( $attachments as $attachment ) {
 
-    $title = apply_filters( "the_title", $attachment->post_title );
+    $title = get_the_title( $attachment );
     $url = wp_get_attachment_url( $attachment->ID );
     $size = fes_file_size( get_attached_file ( $attachment->ID ) );
     $type = fes_get_file_type( $url );
@@ -89,11 +104,11 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
     $link_text = "<span class='file-title'>{$title}</span> (<span class='file-type'>{$type}</span>, <span class='file-size'>{$size}</span>)";
     
     $link = wp_get_attachment_link(
-      $attachment->ID,
-      '',
-      false,
-      true,
-      $link_text
+      $attachment->ID, /* ID */
+      '',              /* No image size */
+      false,           /* false = link to file */
+      false,           /* false = dont' use an icon */
+      $link_text       /* Use a text link */
     );
     
     $output .= "<section class='attachment-entry'>\n";
@@ -101,8 +116,8 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
     $output .= "<h2 class='attachment-title'>" . $title . "</h2>\n";
     $output .= "</header>\n";
     $output .= "<div class='attachment-content'>\n";
+    $output .= "<p class='attachment'>" . $link . "</p>\n";
     $output .= apply_filters( "the_content", $attachment->post_content );
-    $output .= "<p class='file-download'>" . $link . "</p>\n";
     $output .= "</div>\n";
     $output .= "</section>\n";
   }
