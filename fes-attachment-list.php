@@ -8,6 +8,11 @@
  * Version: 1.0.0
 */
 
+// If this file is called directly, die.
+if ( ! defined( 'WPINC' ) ) {
+  die( 'Nope.' );
+}
+
 /**
  * Get human-readable file size.
  * 
@@ -28,7 +33,6 @@ function fes_get_file_type( $file_url ) {
   $file_type = wp_check_filetype( $file_url );
   return $file_type['ext'];
 }
-
 
 /**
  * Builds the attachment list shortcode output.
