@@ -47,8 +47,9 @@ function fes_get_file_type( $file_url ) {
  *                                         Accepts any valid SQL ORDERBY statement.
  *     @type string       $ids             A comma-separated list of IDs of attachments to display. Default empty.
  *     @type string       $id              ID of the parent page to display the attachments of. Default current page.
-                                           Not used if $ids argument is present.
+ *                                         Not used if $ids argument is present.
  *     @type string       $idattribute     ID attribute for the attachment list. Default empty.
+ *     @type string       $caption         Include the caption (summary) text if this is 'true'. Default 'false'.
  * }
  * @return string HTML content to display attachment list.
  */
@@ -61,7 +62,8 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
     'orderby'     => 'title ID',
     'id'          => $post ? $post->ID : 0,
     'ids'         => '',
-    'idattribute' => ''
+    'idattribute' => '',
+    'caption'     => false
   ), $atts );
 
   $id = intval( $atts['id'] );
@@ -90,18 +92,21 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
     return '';
   }
 
-  // Generate the output.
+  $showCaption = ( $atts['caption'] ) ? true : false;
+  
   $idAtt = $atts['idattribute'];
 
   if ( ! empty( $idAtt ) ) {
     $idAtt = " id='{$idAtt}'";
   }
 
+  // Generate the output.
   $output = "<div{$idAtt} class='attachment-list'>";
 
   foreach ( $attachments as $attachment ) {
 
     $title = get_the_title( $attachment );
+    $excerpt = get_the_excerpt( $attachment );
     $url = wp_get_attachment_url( $attachment->ID );
     $size = fes_file_size( get_attached_file ( $attachment->ID ) );
     $type = fes_get_file_type( $url );
@@ -120,6 +125,11 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
     $output .= "<header class='attachment-header'>\n";
     $output .= "<h2 class='attachment-title'>" . $title . "</h2>\n";
     $output .= "</header>\n";
+
+    if ( $excerpt && $showCaption ) {
+      $output .= "<div class='attachment-summary'>\n{$excerpt}\n</div>\n";
+    }
+    
     $output .= "<div class='attachment-content'>\n";
     $output .= "<p class='attachment'>" . $link . "</p>\n";
     $output .= apply_filters( "the_content", $attachment->post_content );
