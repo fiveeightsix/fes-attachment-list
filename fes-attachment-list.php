@@ -1,6 +1,7 @@
 <?php
 /**
  * Plugin Name: Attachment list
+ * Plugin URI: https://github.com/fiveeightsix/fes-attachment-list
  * Description: Provides shortcode for displaying links to and descriptions of attachment posts.
  * Author: Karl Inglis
  * Author URI: http://web.karlinglis.net
