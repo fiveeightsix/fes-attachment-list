@@ -49,6 +49,8 @@ function fes_get_file_type( $file_url ) {
  *     @type string       $id              ID of the parent page to display the attachments of. Default current page.
  *                                         Not used if $ids argument is present.
  *     @type string       $idattribute     ID attribute for the attachment list. Default empty.
+ *     @type string       $classattribute  Additional class attribute for the list, included after 'attachment-list'.
+ *                                         Default empty.
  *     @type string       $caption         Include the caption (summary) text if this is 'true'. Default 'false'.
  * }
  * @return string HTML content to display attachment list.
@@ -58,12 +60,13 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
 
   // Merge shorcut attributes with default values.
   $atts = shortcode_atts( array(
-    'order'       => 'ASC',
-    'orderby'     => 'title ID',
-    'id'          => $post ? $post->ID : 0,
-    'ids'         => '',
-    'idattribute' => '',
-    'caption'     => false
+    'order'          => 'ASC',
+    'orderby'        => 'title ID',
+    'id'             => $post ? $post->ID : 0,
+    'ids'            => '',
+    'idattribute'    => '',
+    'classattribute' => '',
+    'caption'        => false
   ), $atts );
 
   $id = intval( $atts['id'] );
@@ -100,8 +103,14 @@ function fes_attachment_list_shortcode_handler( $atts, $content = null ) {
     $idAtt = " id='{$idAtt}'";
   }
 
+  $classAtt = $atts['classattribute'];
+
+  if ( ! empty( $classAtt ) ) {
+    $classAtt = ' ' . $classAtt;
+  }
+  
   // Generate the output.
-  $output = "<div{$idAtt} class='attachment-list'>";
+  $output = "<div{$idAtt} class='attachment-list{$classAtt}'>";
 
   foreach ( $attachments as $attachment ) {
 
